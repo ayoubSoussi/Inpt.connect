@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -88,6 +89,10 @@ public class MainActivity extends Activity implements LocationListener, OnMapRea
             try {
                 double lat = bilan.getJSONObject(bilan.names().get(i).toString()).getDouble("latitude") ;
                 double lng = bilan.getJSONObject(bilan.names().get(i).toString()).getDouble("longitude") ;
+                //here we are going to retrieve the values
+                //             of other parameters then we will affect them to their marker
+
+
                 options = new MarkerOptions().title(bilan.names().get(i).toString()).
                         position(new LatLng(lat,lng)) ;
                 markers.add(i,mGoogleMap.addMarker(options)) ;
@@ -122,35 +127,46 @@ public class MainActivity extends Activity implements LocationListener, OnMapRea
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mGoogleMap = googleMap;
-        double lat = 0, lng = 0;
-        goTo(lat, lng);
+        if (mGoogleMap!=null){
+            mGoogleMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+                @Override
+                public View getInfoWindow(Marker marker) {
+                    return null;
+                }
+
+                @Override
+                public View getInfoContents(Marker marker) {
+                    View v = getLayoutInflater().inflate(R.layout.markerdialog,null) ;
+                    TextView t = (TextView) v.findViewById(R.id.title) ;
+                    TextView latt = (TextView) v.findViewById(R.id.latitude) ;
+                    TextView longg = (TextView) v.findViewById(R.id.longitude) ;
+                    TextView gaz = (TextView) v.findViewById(R.id.gaz) ;
+                    t.setText(marker.getTitle());
+                    latt.setText("la latitude est :"+marker.getPosition().latitude);
+                    longg.setText("la longitude est :"+marker.getPosition().longitude);
+                    gaz.setText("le pourcentage du gaz est :");
+
+                    //here we are going to set the values of other parameters to their
+                    //      textviews to be displayed when the user click on a marker
+
+
+                    return v;
+                }
+            });
+        }
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
         mGoogleApiClient.connect();
-        drawAmphis() ;
+
+
 
     }
-    private void drawAmphis() {
-        PolygonOptions options = new PolygonOptions()
-                                    .add(Lbat)
-                                    .fillColor(0x33FF0000)
-                                    .strokeColor(0x3300FF00)
-                                    .strokeWidth(3) ;
-        mGoogleMap.addPolygon(options) ;
-    }
 
-    private void goTo(double lat, double lng) {
-        LatLng ll = new LatLng(lat, lng);
-        CameraUpdate update = CameraUpdateFactory.newLatLng(ll);
-        mGoogleMap.moveCamera(update);
-
-    }
 
     LocationRequest locationRequest;
-
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         locationRequest = LocationRequest.create();
@@ -193,13 +209,8 @@ public class MainActivity extends Activity implements LocationListener, OnMapRea
             if (marker !=null) marker.remove();
             MarkerOptions markerOptions = new MarkerOptions()
                     .title("my position")
-                    .position(ll)
-                    .icon(BitmapDescriptorFactory.fromResource(R.mipmap.inpt)) ;
+                    .position(ll).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)) ;
             marker = mGoogleMap.addMarker(markerOptions);
-
-
-            //CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll,19) ;
-            //mGoogleMap.animateCamera(update);
 
 
         }
