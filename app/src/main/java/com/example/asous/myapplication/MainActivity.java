@@ -1,9 +1,9 @@
 package com.example.asous.myapplication;
 
-import android.*;
 import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -18,6 +18,7 @@ import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.example.asous.myapplication.VolleyPackage.GazPosition;
 import com.example.asous.myapplication.VolleyPackage.MySingleton;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -30,15 +31,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polygon;
-import com.google.android.gms.maps.model.PolygonOptions;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -47,13 +44,9 @@ import java.util.ArrayList;
 public class MainActivity extends Activity implements LocationListener, OnMapReadyCallback, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
     GoogleMap mGoogleMap;
     GoogleApiClient mGoogleApiClient;
-    LatLng[] Lbat = {new LatLng(33.9809586,-6.868123),new LatLng(33.9806047,-6.8684366),new LatLng(33.9803336,-6.8680208),new LatLng(33.9806622,-6.8676724)} ;
-    JsonObjectRequest jsonObjectRequest ;
-    String url = "http://www.json-generator.com/api/json/get/ckvwCvgwpu?indent=2" ;
-    int nbMarkers ;
-    ArrayList<Marker> markers ;
 
-    JSONObject bilan ;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,49 +54,8 @@ public class MainActivity extends Activity implements LocationListener, OnMapRea
             setContentView(R.layout.activity_main);
             initMap();
         }
-        bilan = new JSONObject() ;
-        jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                bilan = response ;
-                createMarkers();
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-
-            }
-        }) ;
-
-        MySingleton.getInstance(this).addToRequestQueue(jsonObjectRequest);
-
 
     }
-    public void createMarkers(){
-
-        nbMarkers = bilan.names().length() ;
-        markers = new ArrayList<>(nbMarkers) ;
-        MarkerOptions options ;
-        for (int i=0;i<nbMarkers;i++){
-            //if (markers.get(i) != null) markers.get(i).remove();
-            try {
-                double lat = bilan.getJSONObject(bilan.names().get(i).toString()).getDouble("latitude") ;
-                double lng = bilan.getJSONObject(bilan.names().get(i).toString()).getDouble("longitude") ;
-                //here we are going to retrieve the values
-                //             of other parameters then we will affect them to their marker
-
-
-                options = new MarkerOptions().title(bilan.names().get(i).toString()).
-                        position(new LatLng(lat,lng)) ;
-                markers.add(i,mGoogleMap.addMarker(options)) ;
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-        }
-
-    }
-
     private void initMap() {
         MapFragment mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
         mapFragment.getMapAsync(this);
@@ -144,15 +96,23 @@ public class MainActivity extends Activity implements LocationListener, OnMapRea
                     t.setText(marker.getTitle());
                     latt.setText("la latitude est :"+marker.getPosition().latitude);
                     longg.setText("la longitude est :"+marker.getPosition().longitude);
-                    gaz.setText("le pourcentage du gaz est :");
-
-                    //here we are going to set the values of other parameters to their
-                    //      textviews to be displayed when the user click on a marker
-
-
+                    gaz.setText(marker.getSnippet());
                     return v;
                 }
             });
+
+            Intent intent = getIntent() ;
+            ArrayList<GazPosition> g = (ArrayList<GazPosition>) intent.getSerializableExtra("gazp");
+            for (GazPosition r : g  ){
+                MarkerOptions op = new MarkerOptions().title(r.getTitle()).position(r.getLl()).snippet("le co2 : "+r.getCoo()+"  et Extra : "+r.getExtra()) ;
+                if (r.getCoo()<4){
+                    op.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)) ;
+                }else op.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)) ;
+                mGoogleMap.addMarker(op) ;
+            }
+
+
+
         }
         mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(LocationServices.API)
@@ -164,7 +124,6 @@ public class MainActivity extends Activity implements LocationListener, OnMapRea
 
 
     }
-
 
     LocationRequest locationRequest;
     @Override
@@ -198,22 +157,21 @@ public class MainActivity extends Activity implements LocationListener, OnMapRea
     }
 
     Marker marker ;
+    boolean initial = true ;
     @Override
 
     public void onLocationChanged(Location location) {
         if (location == null){
             Toast.makeText(this, "cant get your location", Toast.LENGTH_LONG).show();
         }
-        else{
+        else if (initial){
             LatLng ll  = new LatLng(location.getLatitude(),location.getLongitude()) ;
-            if (marker !=null) marker.remove();
-            MarkerOptions markerOptions = new MarkerOptions()
-                    .title("my position")
-                    .position(ll).icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN)) ;
-            marker = mGoogleMap.addMarker(markerOptions);
+            CameraUpdate update = CameraUpdateFactory.newLatLngZoom(ll,15) ;
+            mGoogleMap.animateCamera(update);
+            initial = false ;}
 
 
-        }
+
 
     }
 }
