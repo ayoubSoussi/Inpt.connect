@@ -32,18 +32,22 @@ public class Main2Activity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
-
         jsonRequest = new JsonRequest() ;
         MySingleton.getInstance(this).addToRequestQueue(jsonRequest.getJsonObjectRequest());
+
+
 
 
     }
     public void go(View v){
         gazArray = new ArrayList<>(nbMarkers) ;
         gazArray = jsonRequest.getGazArray() ;
+        if (gazArray == null){
+            Toast.makeText(Main2Activity.this,"please check your connection and restart the app",Toast.LENGTH_LONG ).show();
+        }else{
         Intent intent = new Intent(Main2Activity.this,MainActivity.class) ;
         intent.putExtra("gazp",gazArray) ;
-        startActivity(intent);
+        startActivity(intent);}
     }
 
 }
