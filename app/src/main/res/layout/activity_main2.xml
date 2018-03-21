@@ -1,44 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main2"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.example.asous.myapplication.Main2Activity"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@drawable/app">
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="150dp"
-        android:background="#41f2ff">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Welcome"
-            android:textSize="36dp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true"
-            android:id="@+id/textView" />
+    <Button
+        android:layout_width="210dp"
+        android:layout_height="55dp"
+        android:id="@+id/button2"
+        android:onClick="go"
+        android:background="#00ffffff"
+        android:layout_marginEnd="80dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="150dp" />
 
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <Button
-            android:background="@drawable/grad"
-            android:layout_gravity="center"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Show the map "
-            android:id="@+id/button2"
-            android:onClick="go"
-            android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true" />
-    </RelativeLayout>
-
-</LinearLayout>
+</RelativeLayout>

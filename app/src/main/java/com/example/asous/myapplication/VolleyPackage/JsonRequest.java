@@ -18,7 +18,7 @@ import static java.security.AccessController.getContext;
 
 public class JsonRequest {
     JsonObjectRequest jsonObjectRequest ;
-    String url = "http://www.json-generator.com/api/json/get/bRysHyczhe?indent=2" ;
+    String url = "http://www.json-generator.com/api/json/get/bUDiGKcYgO?indent=2" ;
     int nbMarkers ;
     ArrayList<GazPosition> gazArray ;
 
